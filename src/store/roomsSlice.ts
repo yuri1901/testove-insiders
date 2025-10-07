@@ -19,7 +19,11 @@ const loadRoomsFromStorage = (): Room[] => {
   try {
     const storedRooms = localStorage.getItem(STORAGE_KEY);
     if (storedRooms) {
-      return JSON.parse(storedRooms);
+      const rooms = JSON.parse(storedRooms);
+      return rooms.map((room: any) => ({
+        ...room,
+        members: room.members || [],
+      }));
     }
   } catch (error) {
     console.log(error);
@@ -51,12 +55,20 @@ const roomsSlice = createSlice({
   initialState,
   reducers: {
     // create room
-    createRoom: (state, action: PayloadAction<{ name: string; description: string }>) => {
+    createRoom: (state, action: PayloadAction<{ name: string; description: string; createdBy: string }>) => {
       const newRoom: Room = {
         id: `room-${Date.now()}`,
         name: action.payload.name,
         description: action.payload.description,
         createdAt: new Date().toISOString().split("T")[0],
+        members: [
+          {
+            email: action.payload.createdBy,
+            role: "admin",
+            addedAt: new Date().toISOString(),
+            addedBy: action.payload.createdBy,
+          },
+        ],
       };
       state.rooms.push(newRoom);
       saveRoomsToStorage(state.rooms);
@@ -115,7 +127,7 @@ const roomsSlice = createSlice({
     },
 
     // send create form
-    handleCreateSubmit: (state, action: PayloadAction<{ name: string; description: string }>) => {
+    handleCreateSubmit: (state, action: PayloadAction<{ name: string; description: string; createdBy: string }>) => {
       if (!action.payload.name.trim() || !action.payload.description.trim()) {
         alert("Будь ласка, заповніть всі поля");
         return;
@@ -126,6 +138,14 @@ const roomsSlice = createSlice({
         name: action.payload.name,
         description: action.payload.description,
         createdAt: new Date().toISOString().split("T")[0],
+        members: [
+          {
+            email: action.payload.createdBy,
+            role: "admin",
+            addedAt: new Date().toISOString(),
+            addedBy: action.payload.createdBy,
+          },
+        ],
       };
       state.rooms.push(newRoom);
       saveRoomsToStorage(state.rooms);
@@ -156,6 +176,43 @@ const roomsSlice = createSlice({
       state.formData = { name: "", description: "" };
     },
 
+    // Room members management
+    addRoomMember: (state, action: PayloadAction<{ roomId: string; email: string; role: "admin" | "user"; addedBy: string }>) => {
+      const room = state.rooms.find((r) => r.id === action.payload.roomId);
+      if (room) {
+        // Check if member already exists
+        const existingMember = room.members.find((m) => m.email === action.payload.email);
+        if (!existingMember) {
+          room.members.push({
+            email: action.payload.email,
+            role: action.payload.role,
+            addedAt: new Date().toISOString(),
+            addedBy: action.payload.addedBy,
+          });
+          saveRoomsToStorage(state.rooms);
+        }
+      }
+    },
+
+    updateRoomMemberRole: (state, action: PayloadAction<{ roomId: string; email: string; role: "admin" | "user" }>) => {
+      const room = state.rooms.find((r) => r.id === action.payload.roomId);
+      if (room) {
+        const member = room.members.find((m) => m.email === action.payload.email);
+        if (member) {
+          member.role = action.payload.role;
+          saveRoomsToStorage(state.rooms);
+        }
+      }
+    },
+
+    removeRoomMember: (state, action: PayloadAction<{ roomId: string; email: string }>) => {
+      const room = state.rooms.find((r) => r.id === action.payload.roomId);
+      if (room) {
+        room.members = room.members.filter((m) => m.email !== action.payload.email);
+        saveRoomsToStorage(state.rooms);
+      }
+    },
+
     // close modal
     closeModals: (state) => {
       state.isCreateModalOpen = false;
@@ -166,6 +223,6 @@ const roomsSlice = createSlice({
   },
 });
 
-export const { createRoom, editRoom, deleteRoom, handleCreateRoom, handleEditRoom, handleDeleteRoom, handleFormChange, handleCreateSubmit, handleEditSubmit, closeModals } = roomsSlice.actions;
+export const { createRoom, editRoom, deleteRoom, handleCreateRoom, handleEditRoom, handleDeleteRoom, handleFormChange, handleCreateSubmit, handleEditSubmit, addRoomMember, updateRoomMemberRole, removeRoomMember, closeModals } = roomsSlice.actions;
 
 export default roomsSlice.reducer;

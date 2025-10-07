@@ -2,11 +2,13 @@ import RoomItem from "../../components/RoomItem";
 import ModalRoom from "../../modal/ModalRoom";
 import PageHeader from "../../components/PageHeader";
 import { useAppSelector, useAppDispatch } from "../../store/hooks";
-import { handleCreateRoom, handleEditRoom, handleDeleteRoom, handleFormChange, handleCreateSubmit, handleEditSubmit, closeModals } from "../../store/roomsSlice";
+import { handleCreateRoom, handleEditRoom, handleDeleteRoom, handleFormChange, handleCreateSubmit, handleEditSubmit, closeModals, addRoomMember } from "../../store/roomsSlice";
+import { useAuthContext } from "../../context/ContextAuth";
 
 const RoomPage = () => {
   const dispatch = useAppDispatch();
-  const { rooms, isCreateModalOpen, isEditModalOpen, formData } = useAppSelector((state) => state.rooms);
+  const { rooms, isCreateModalOpen, isEditModalOpen, formData, selectedRoom } = useAppSelector((state) => state.rooms);
+  const { currentUser } = useAuthContext();
 
   return (
     <>
@@ -33,7 +35,7 @@ const RoomPage = () => {
         isOpen={isCreateModalOpen}
         title="Створити нову кімнату"
         formData={formData}
-        onSubmit={(data) => dispatch(handleCreateSubmit(data))}
+        onSubmit={(data) => dispatch(handleCreateSubmit({ ...data, createdBy: currentUser?.email || "" }))}
         onClose={() => dispatch(closeModals())}
         onFormChange={(field, value) => dispatch(handleFormChange({ field, value }))}
         submitButtonText="Створити"
@@ -49,6 +51,18 @@ const RoomPage = () => {
         onFormChange={(field, value) => dispatch(handleFormChange({ field, value }))}
         submitButtonText="Зберегти"
         submitButtonColor="green"
+        isEditing={true}
+        members={selectedRoom?.members || []}
+        onAddUser={(email, role) => {
+          dispatch(
+            addRoomMember({
+              roomId: selectedRoom?.id || "",
+              email,
+              role,
+              addedBy: currentUser?.email || "",
+            })
+          );
+        }}
       />
     </>
   );

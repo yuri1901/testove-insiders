@@ -2,18 +2,7 @@
 import { useEffect, useState } from "react";
 import { auth } from "../firebase/firebaseConfig";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut, type User } from "firebase/auth";
-
-export interface FormData {
-  name: string;
-  email: string;
-  password: string;
-}
-
-export interface FormErrors {
-  name?: string;
-  email?: string;
-  password?: string;
-}
+import type { FormData, FormErrors } from "../types";
 
 const useAuth = (isLogin: boolean) => {
   const [formData, setFormData] = useState<FormData>({
@@ -25,7 +14,6 @@ const useAuth = (isLogin: boolean) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  // Відслідковуємо стан користувача
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
@@ -33,7 +21,6 @@ const useAuth = (isLogin: boolean) => {
     return () => unsubscribe();
   }, []);
 
-  // Скидання форми при зміні режиму (login/register)
   useEffect(() => {
     clearForm();
   }, [isLogin]);
@@ -45,8 +32,8 @@ const useAuth = (isLogin: boolean) => {
       [name]: value,
     }));
 
-    if (errors[name as keyof FormErrors]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }));
+    if (errors[name as keyof FormErrors] || errors.auth) {
+      setErrors((prev) => ({ ...prev, [name]: undefined, auth: undefined }));
     }
   };
 
@@ -88,20 +75,16 @@ const useAuth = (isLogin: boolean) => {
     try {
       if (isLogin) {
         await signInWithEmailAndPassword(auth, formData.email, formData.password);
-        alert("Вхід успішний!");
       } else {
-        const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+        await createUserWithEmailAndPassword(auth, formData.email, formData.password);
 
         if (auth.currentUser) {
           await updateProfile(auth.currentUser, { displayName: formData.name });
         }
-
-        alert("Реєстрація успішна!");
       }
 
       clearForm();
     } catch (error: any) {
-      // Виводимо помилку Firebase
       let message = "Сталася помилка. Спробуйте ще раз.";
       if (error.code === "auth/email-already-in-use") {
         message = "Цей email вже використовується";
@@ -110,8 +93,7 @@ const useAuth = (isLogin: boolean) => {
       } else if (error.code === "auth/wrong-password") {
         message = "Невірний пароль";
       }
-      alert(message);
-      console.error(error);
+      setErrors({ auth: message });
     } finally {
       setIsSubmitting(false);
     }
@@ -124,7 +106,6 @@ const useAuth = (isLogin: boolean) => {
 
   const logout = async () => {
     await signOut(auth);
-    alert("Ви вийшли із системи");
   };
 
   return {

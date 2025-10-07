@@ -1,6 +1,22 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useAuthContext } from "../../context/ContextAuth";
 
 const HomePage = () => {
+  const { currentUser } = useAuthContext();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (currentUser) {
+      navigate("/rooms", { replace: true });
+    }
+  }, [currentUser, navigate]);
+
+  // Don't render anything if user is authenticated (will redirect)
+  if (currentUser) {
+    return null;
+  }
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100">
       {/* Hero Section */}

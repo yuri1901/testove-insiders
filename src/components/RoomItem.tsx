@@ -1,4 +1,4 @@
-import type { Room } from "../mockData";
+import type { Room } from "../types";
 
 interface RoomItemProps {
   room: Room;

@@ -1,4 +1,5 @@
 import { createPortal } from "react-dom";
+import { useModal } from "../hooks/useModal";
 
 interface ModalRoomProps {
   isOpen: boolean;
@@ -15,26 +16,13 @@ interface ModalRoomProps {
 }
 
 const ModalRoom = ({ isOpen, title, formData, onSubmit, onClose, onFormChange, submitButtonText, submitButtonColor = "blue" }: ModalRoomProps) => {
+  const { handleSubmit, getSubmitButtonClasses, handleBackdropClick } = useModal({
+    onSubmit,
+    onClose,
+    submitButtonColor,
+  });
+
   if (!isOpen) return null;
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(formData);
-  };
-
-  const getSubmitButtonClasses = () => {
-    const baseClasses = "px-6 py-2 rounded-md text-base font-medium transition-colors cursor-pointer";
-    if (submitButtonColor === "green") {
-      return `bg-green-500 hover:bg-green-600 text-white ${baseClasses}`;
-    }
-    return `bg-blue-500 hover:bg-blue-600 text-white ${baseClasses}`;
-  };
-
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
 
   return createPortal(
     <section
@@ -55,7 +43,7 @@ const ModalRoom = ({ isOpen, title, formData, onSubmit, onClose, onFormChange, s
         </header>
 
         <main className="px-8 pb-8">
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={(e) => handleSubmit(e, formData)}>
             <div className="mb-5">
               <label
                 htmlFor="name"

@@ -1,20 +1,22 @@
 import { useEffect } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
+import { useAuthContext } from "../../context/ContextAuth";
 import useAuth from "../../hooks/useAuth";
 import "./AuthForm.css";
 
 const AuthPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { currentUser } = useAuthContext();
 
   const authType = searchParams.get("type") || "login";
   const isLogin = authType === "login";
 
-  const { formData, errors, isSubmitting, currentUser, handleInputChange, handleSubmit } = useAuth(isLogin);
+  const { formData, errors, isSubmitting, handleInputChange, handleSubmit } = useAuth(isLogin);
 
   useEffect(() => {
     if (currentUser) {
-      navigate("/");
+      navigate("/rooms", { replace: true });
     }
   }, [currentUser, navigate]);
 
@@ -88,6 +90,12 @@ const AuthPage = () => {
             />
             {errors.password && <span className="error-message">{errors.password}</span>}
           </div>
+
+          {errors.auth && (
+            <div className="form-group">
+              <span className="error-message auth-error">{errors.auth}</span>
+            </div>
+          )}
 
           <button
             type="submit"

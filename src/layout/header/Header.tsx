@@ -1,11 +1,17 @@
 import { Link } from "react-router-dom";
-import useAuth from "../../hooks/useAuth";
+import { useAuthContext } from "../../context/ContextAuth";
+import { signOut } from "firebase/auth";
+import { auth } from "../../firebase/firebaseConfig";
 
 const Header = () => {
-  const { currentUser, logout } = useAuth(false);
+  const { currentUser } = useAuthContext();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   };
 
   return (
@@ -48,10 +54,9 @@ const Header = () => {
                 Мої бронювання
               </Link>
             </nav>
-          )}{" "}
+          )}
           <div className="flex items-center space-x-4">
             {currentUser ? (
-              // Користувач увійшов
               <>
                 <span className="text-gray-700 text-sm font-medium">Привіт, {currentUser.displayName || currentUser.email}!</span>
                 <button

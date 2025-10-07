@@ -83,6 +83,17 @@
   display: block;
 }
 
+.error-message.auth-error {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #f5c6cb;
+}
+
 .submit-button {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;

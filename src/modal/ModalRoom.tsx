@@ -1,5 +1,7 @@
 import { createPortal } from "react-dom";
 import { useModal } from "../hooks/useModal";
+import { useState } from "react";
+import type { RoomMember } from "../types";
 
 interface ModalRoomProps {
   isOpen: boolean;
@@ -13,14 +15,30 @@ interface ModalRoomProps {
   onFormChange: (field: "name" | "description", value: string) => void;
   submitButtonText: string;
   submitButtonColor?: "blue" | "green";
+  // For user management
+  isEditing?: boolean;
+  members?: RoomMember[];
+  onAddUser?: (email: string, role: "admin" | "user") => void;
 }
 
-const ModalRoom = ({ isOpen, title, formData, onSubmit, onClose, onFormChange, submitButtonText, submitButtonColor = "blue" }: ModalRoomProps) => {
+const ModalRoom = ({ isOpen, title, formData, onSubmit, onClose, onFormChange, submitButtonText, submitButtonColor = "blue", isEditing = false, members = [], onAddUser }: ModalRoomProps) => {
   const { handleSubmit, getSubmitButtonClasses, handleBackdropClick } = useModal({
     onSubmit,
     onClose,
     submitButtonColor,
   });
+
+  const [userEmail, setUserEmail] = useState("");
+  const [userRole, setUserRole] = useState<"admin" | "user">("user");
+
+  const handleAddUserSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (userEmail.trim() && onAddUser) {
+      onAddUser(userEmail.trim(), userRole);
+      setUserEmail("");
+      setUserRole("user");
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -79,6 +97,63 @@ const ModalRoom = ({ isOpen, title, formData, onSubmit, onClose, onFormChange, s
                 placeholder="Введіть опис кімнати"
               />
             </div>
+
+            {/* User management section - only for editing */}
+            {isEditing && (
+              <div className="mb-5 border-t pt-5">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Управління користувачами</h3>
+
+                {/* Add user form */}
+                <form
+                  onSubmit={handleAddUserSubmit}
+                  className="mb-4"
+                >
+                  <div className="flex gap-3">
+                    <input
+                      type="email"
+                      value={userEmail}
+                      onChange={(e) => setUserEmail(e.target.value)}
+                      placeholder="testuser1@gmail.com"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                    <select
+                      value={userRole}
+                      onChange={(e) => setUserRole(e.target.value as "admin" | "user")}
+                      className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="user">User</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+                      disabled={!userEmail.trim()}
+                    >
+                      Додати
+                    </button>
+                  </div>
+                </form>
+
+                {/* Current members list */}
+                {members.length > 0 && (
+                  <div>
+                    <h4 className="font-medium text-gray-700 mb-2">Поточні користувачі:</h4>
+                    <div className="space-y-2">
+                      {members.map((member) => (
+                        <div
+                          key={member.email}
+                          className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                        >
+                          <span className="text-sm font-medium">{member.email}</span>
+                          <span className={`px-2 py-1 text-xs rounded-full ${member.role === "admin" ? "bg-purple-100 text-purple-800" : "bg-blue-100 text-blue-800"}`}>{member.role === "admin" ? "Admin" : "User"}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <footer className="flex gap-3 justify-end mt-8">
               <button

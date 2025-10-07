@@ -3,6 +3,7 @@ export interface Room {
   name: string;
   description: string;
   createdAt: string;
+  members: RoomMember[];
 }
 
 export interface Booking {
@@ -14,6 +15,13 @@ export interface Booking {
   description: string;
   status: "active" | "cancelled";
   createdAt: string;
+}
+
+export interface RoomMember {
+  email: string;
+  role: "admin" | "user";
+  addedAt: string;
+  addedBy: string;
 }
 
 export interface FormData {

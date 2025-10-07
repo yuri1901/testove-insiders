@@ -56,7 +56,7 @@ const Header = () => {
                 <span className="text-gray-700 text-sm font-medium">Привіт, {currentUser.displayName || currentUser.email}!</span>
                 <button
                   onClick={handleLogout}
-                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 cursor-pointer"
                 >
                   Вийти
                 </button>

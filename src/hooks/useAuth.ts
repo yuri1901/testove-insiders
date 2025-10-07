@@ -87,11 +87,9 @@ const useAuth = (isLogin: boolean) => {
 
     try {
       if (isLogin) {
-        // Вхід
         await signInWithEmailAndPassword(auth, formData.email, formData.password);
         alert("Вхід успішний!");
       } else {
-        // Реєстрація
         const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
 
         if (auth.currentUser) {
